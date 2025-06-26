@@ -12,6 +12,7 @@ const warehouseProductRoutes = require("./src/routes/warehouseWeb/productsRoute"
 const warehouseUsersRoutes = require("./src/routes/warehouseWeb/warehouseUsersRoute");
 const warehouseDeliveryAgentRoutes = require("./src/routes/warehouseWeb/deliveryAgentRoute");
 const warehouseVehicleRoutes = require("./src/routes/warehouseWeb/warehouseVehicleRoute");
+const orderRoutes = require("./src/routes/warehouseWeb/orderRoute");
 
 app.use(cors({ origin: true }));
 app.use(bodyParser.json());
@@ -23,6 +24,7 @@ app.use("/api", warehouseProductRoutes);
 app.use("/api", warehouseUsersRoutes);
 app.use("/api", warehouseDeliveryAgentRoutes);
 app.use("/api", warehouseVehicleRoutes);
+app.use("/api", orderRoutes);
 
 // const port = 3000;
 // app.listen(port,()=>{
