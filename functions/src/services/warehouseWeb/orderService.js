@@ -40,7 +40,7 @@ const createOrder = async (orderData) => {
     paymentMethod: orderData.paymentMethod,
     deliveryAgentId: null,
     createdAt: new Date().toISOString(),
-    updatedAt: createdAt,
+    updatedAt: new Date().toISOString(),
   };
 
   const orderRef = db.collection("orders").doc(orderId);
