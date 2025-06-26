@@ -10,7 +10,7 @@ const CreateProductSchema = z.object({
   distributorPrice: z.number().positive(),
   supplierId: z.string().min(1),
   warehouseId: z.string().min(1),
-  minimumOrderQuantity: z.number().min(1)
+  minimumOrderQuantity: z.number().min(1),
 });
 
 const UpdateProductSchema = z.object({
