@@ -1,11 +1,21 @@
 const { z } = require('zod');
 
+const { DocumentReference } = require('firebase/firestore');
+
+// const userRef = z.instanceof(DocumentReference);
+const userRef = z.union([
+  z.instanceof(DocumentReference),
+  z.string().regex(/^.+\/.+$/, "userRef must be a Firestore path")
+]);
+
+
 const CreateUserSchema = z.object({
   phoneNumber: z.string().min(10).max(15),
   name: z.string().min(2).max(100),
   email: z.string().email(),
   role: z.string(),
-  warehouseId: z.string().min(1)
+  warehouseId: z.string().min(1),
+  // userInfo: firestoreRef
 });
 
 const UpdateUserSchema = z.object({
@@ -16,6 +26,7 @@ const UpdateUserSchema = z.object({
 });
 
 module.exports = {
+    userRef,
     CreateUserSchema,
     UpdateUserSchema
 }

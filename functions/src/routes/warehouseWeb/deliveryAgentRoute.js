@@ -8,7 +8,7 @@ const deliveryController = require('../../controllers/warehouseWeb/deliveryAgent
 router.post('/create/deliveryAgent', deliveryController.createAgent);
 
 // Get agent by ID
-router.get('/:agentId', deliveryController.getAgent);
+router.get('/deliveryAgent/:agentId', deliveryController.getAgent);
 
 // Get all agents for a warehouse
 router.get('/warehouse/:warehouseId', deliveryController.getWarehouseAgents);

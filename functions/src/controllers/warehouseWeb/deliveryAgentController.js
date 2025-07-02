@@ -1,6 +1,10 @@
+const {db} = require('../../config/firebase');
 const deliveryService = require('../../services/warehouseWeb/deliveryAgentService');
 const { z } = require('zod');
 const { CreateDeliveryAgentSchema, UpdateDeliveryAgentSchema } = require('../../schemas/warehouseWeb/deliveryAgentValidation');
+// const { userRef } = require('../../schemas/warehouseWeb/warehouseUsersValidation');
+// const { doc } = require('firebase/firestore');
+
 
 const handleError = (error, res) => {
   if (error instanceof z.ZodError) {
@@ -17,7 +21,23 @@ const handleError = (error, res) => {
 
 const createAgent = async (req, res) => {
   try {
-    const validatedData = CreateDeliveryAgentSchema.parse(req.body);
+    const [docCollection, docId] = req.body.userRef.split('/');
+    console.log(docCollection);
+    console.log(docId);
+    // const preparedBody = {
+    //   ...req.body,
+    //   userRef: db.collection(docCollection).doc(docId),
+    // }
+
+
+    const preparedBody = {
+      ...req.body,
+      userRef: {
+        docCollection,
+        docId
+      },
+    }
+    const validatedData = CreateDeliveryAgentSchema.parse(preparedBody);
     const agent = await deliveryService.createDeliveryAgent(validatedData);
     res.status(201).json(agent);
   } catch (error) {

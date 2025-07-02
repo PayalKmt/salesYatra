@@ -100,6 +100,55 @@ const updateVehicleLocation = async (vehicleId, location) => {
   }
 };
 
+
+const assignVehicleToAgent = async (vehicleId, agentId) => {
+  try {
+    // console.log(vehicleId);
+    // console.log(agentId);
+    const agentDocRef = db.collection('deliveryAgents').doc(agentId);
+    const agentDoc = await agentDocRef.get();
+    const vehicleDocRef = db.collection('vehicles').doc(vehicleId);
+    const vehicleDoc = await vehicleDocRef.get();
+
+    if (!agentDoc.exists) throw new Error('Delivery agent not found');
+    if (!vehicleDoc.exists) throw new Error('Vehicle not found');
+
+    // Check if vehicle is already assigned to another agent
+    const existingAgentSnapshot = await db.collection('deliveryAgents')
+      .where('vehicleId', '==', vehicleId)
+      .limit(1)
+      .get();
+
+    if (!existingAgentSnapshot.empty && existingAgentSnapshot.docs[0].id !== agentId) {
+      throw new Error('Vehicle is already assigned to another agent');
+    }
+
+    const batch = db.batch();
+    const agentRef = db.collection('deliveryAgents').doc(agentId);
+    const vehicleRef = db.collection('vehicles').doc(vehicleId);
+    // console.log("Vehicle Ref .....", vehicleRef);
+
+    // Update agent with vehicle assignment
+    batch.update(agentRef, {
+      vehicleId: vehicleId,
+      updatedAt: new Date().toISOString()
+    });
+
+    // Optionally update vehicle with agent reference if needed
+    batch.update(vehicleRef, {
+      agentId: agentId,
+      updatedAt: new Date().toISOString()
+    });
+
+    await batch.commit();
+    return getVehicleById(vehicleId);
+  } catch (error) {
+    console.error('Error assigning vehicle to agent:', error);
+    throw new Error(error.message || 'Failed to assign vehicle');
+  }
+};
+
+
 const deleteVehicle = async (vehicleId) => {
   try {
     const agentsSnapshot = await db.collection('deliveryAgents')
@@ -124,5 +173,6 @@ module.exports = {
   getVehiclesByWarehouse,
   updateVehicle,
   updateVehicleLocation,
+  assignVehicleToAgent,
   deleteVehicle
 };

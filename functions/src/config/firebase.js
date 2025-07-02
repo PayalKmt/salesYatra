@@ -6,8 +6,9 @@ admin.initializeApp({
   storageBucket: process.env.FIREBASE_STORAGE_BUCKET
 });
 
+const FieldValue = admin.firestore.FieldValue;
 const db = admin.firestore();
 const auth = admin.auth();
 const storage = admin.storage();
 
-module.exports = { admin, db, auth, storage };
+module.exports = { admin, db, auth, storage, FieldValue };

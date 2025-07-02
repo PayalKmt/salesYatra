@@ -1,6 +1,7 @@
 const vehicleService = require('../../services/warehouseWeb/warehouseVehicleService');
 const { z } = require('zod');
-const { CreateVehicleSchema, UpdateVehicleSchema } = require('../../schemas/warehouseWeb/warehouseVehicleValidation');
+const { CreateVehicleSchema, UpdateVehicleSchema, assignVehicleSchema } = require('../../schemas/warehouseWeb/warehouseVehicleValidation');
+const { StatusCodes } = require("http-status-codes");
 
 const handleError = (error, res) => {
   if (error instanceof z.ZodError) {
@@ -69,6 +70,27 @@ const updateLocation = async (req, res) => {
   }
 };
 
+
+const assignVehicle = async (req, res) => {
+  try {
+    console.log(req.params.vehicleId);
+    const validatedData = assignVehicleSchema.parse(req.body);
+    console.log(validatedData);
+    await vehicleService.assignVehicleToAgent(
+      req.params.vehicleId,
+      validatedData.agentId
+    );
+    res
+      .status(StatusCodes.OK)
+      .json({ message: "Delivery agent assigned successfully" });
+  } catch (error) {
+    res.status(StatusCodes.BAD_REQUEST).json({
+      message: error.errors ? "Validation error" : error.message,
+      errors: error.errors || undefined,
+    });
+  }
+};
+
 const deleteVehicle = async (req, res) => {
   try {
     const result = await vehicleService.deleteVehicle(req.params.vehicleId);
@@ -84,5 +106,6 @@ module.exports = {
   getWarehouseVehicles,
   updateVehicle,
   updateLocation,
+  assignVehicle,
   deleteVehicle
 };

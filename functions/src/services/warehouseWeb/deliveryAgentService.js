@@ -1,17 +1,19 @@
-const admin = require('firebase-admin');
-const db = admin.firestore();
+const {db, FieldValue} = require('../../config/firebase');
 const { v4: uuidv4 } = require('uuid');
+// const arrayUnion = FieldValue.arrayUnion;
+// const FieldValue = admin.firestore.FieldValue;
 // const { date } = require('zod/v4');
 
 const createDeliveryAgent = async (agentData) => {
   try {
     // Verify user exists
-    // const userDoc = await db.collection('users').doc(agentData.userId).get();
-    // if (!userDoc.exists) {
-    //   throw new Error('User not found');
-    // }
+    const userDoc = await db.collection('warehouseUsers').doc(agentData.userRef.docId).get();
+    if (!userDoc.exists) {
+      throw new Error('User not found');
+    }
 
     // Verify warehouse exists
+    // console.log(agentData);
     const warehouseDoc = await db.collection('warehouses').doc(agentData.warehouseId).get();
     if (!warehouseDoc.exists) {
       throw new Error('Warehouse not found');
@@ -24,6 +26,7 @@ const createDeliveryAgent = async (agentData) => {
         throw new Error('Vehicle not found');
       }
     }
+    
 
     const agentId = uuidv4();
     const agentRef = db.collection('deliveryAgents').doc(agentId);
@@ -78,7 +81,7 @@ const updateAgent = async (agentId, updateData) => {
 
     await agentRef.update({
       ...updateData,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      updatedAt: FieldValue.serverTimestamp()
     });
 
     return getAgentById(agentId);
@@ -93,17 +96,19 @@ const assignOrderToAgent = async (agentId, orderId) => {
     const batch = db.batch();
     const agentRef = db.collection('deliveryAgents').doc(agentId);
     const orderRef = db.collection('orders').doc(orderId);
+    // console.log("FieldValue:", admin.firestore.FieldValue);
+    // console.log(FieldValue.arrayUnion(orderId));
 
     batch.update(agentRef, {
-      currentOrders: admin.firestore.FieldValue.arrayUnion(orderId),
+      currentOrders: [orderId],
       status: 'busy',
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      updatedAt: new Date().toISOString()
     });
 
     batch.update(orderRef, {
       deliveryAgentId: agentId,
       status: 'assigned',
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      updatedAt: new Date().toISOString()
     });
 
     await batch.commit();

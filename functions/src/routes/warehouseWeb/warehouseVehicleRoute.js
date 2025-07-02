@@ -19,6 +19,9 @@ router.put('/update/vehicleDetail/:vehicleId', vehicleController.updateVehicle);
 // Update vehicle location
 router.put('/update/vehicleLocation/:vehicleId', vehicleController.updateLocation);
 
+// assign vehicle to agent
+router.post('/:vehicleId/assignVehicle', vehicleController.assignVehicle);
+
 // Delete vehicle
 router.delete('delete/:vehicleId', vehicleController.deleteVehicle);
 
