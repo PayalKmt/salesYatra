@@ -13,6 +13,42 @@ const createStore = async(req,res) => {
     }
 }
 
+const getStoreById = async (req, res) => {
+  try {
+    const store = await storeService.getStore(req.body.storeId);
+    res.status(StatusCodes.ACCEPTED).json(store);
+  } catch (e) {
+    console.log("Store Not Found !");
+    res.status(StatusCodes.NOT_FOUND);
+  }
+};
+
+const updateStoreData = async (req, res) => {
+  try {
+    const storeUpdateData = await storeService.updateStore(
+      req.params.storeId,
+      req.body
+    );
+    res.status(StatusCodes.ACCEPTED).json(storeUpdateData);
+  } catch (e) {
+    console.log("Store Not Found !");
+    res.status(StatusCodes.BAD_REQUEST);
+  }
+};
+
+const deleteStoreById = async (req, res) => {
+  try {
+    const storeDeleted = await storeService.deleteStore(req.params.storeId);
+    res.status(StatusCodes.No_CONTENT).json(storeDeleted);
+  } catch (e) {
+    console.log("Store Not Found !");
+    res.status(StatusCodes.BAD_REQUEST);
+  }
+};
+
 module.exports = {
-    createStore
+  createStore,
+  getStoreById,
+  updateStoreData,
+  deleteStoreById,
 };
