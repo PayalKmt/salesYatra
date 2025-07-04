@@ -1,27 +1,25 @@
-const { db } = require('../config/firebase');
+const { db } = require("../config/firebase");
 const {
   StoreSchema,
   UpdateStoreSchema,
-} = require("../schemas/storeValidation.js");
+} = require("../schemas/storeValidation");
 const { StatusCodes } = require("http-status-codes");
 const { v4: uuidv4 } = require("uuid");
 
 const createStore = async (storeData) => {
   try {
-    // Generate a unique ID for the user
-    const storeId = uuidv4();
-
     const validatedData = StoreSchema.parse({
-      storeId,
       ...storeData,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
 
+    // Generate a unique ID for the user
+    const storeId = uuidv4();
     const storeRef = db.collection("stores").doc(storeId);
 
     // Store the user data in Firestore
-    await storeRef.set(validatedData);
+    await storeRef.set({ storeId, ...validatedData });
 
     // Return the created user data
     return {

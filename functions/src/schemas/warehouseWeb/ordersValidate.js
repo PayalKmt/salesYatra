@@ -25,6 +25,7 @@ const createOrderSchema = z.object({
   supplierId: z.string().min(1, "Supplier ID is required"),
   warehouseId: z.string().min(1, "Warehouse ID is required"),
   deliveryAddress: AddressSchema,
+  storeId: z.array(z.string().min(1)).optional(),
   estimatedDeliveryTime: z.string().datetime({ offset: true }),
   paymentMethod: z.enum([
     "credit_card",
@@ -45,8 +46,14 @@ const assignAgentSchema = z.object({
   deliveryAgentId: z.string().min(1, "Delivery agent ID is required"),
 });
 
+const assignStoresSchema = z.object({
+  storeId: z.array(z.string().min(1, "Each Store ID must be non-empty")).min(1, "At least one store ID is required"),
+});
+
+
 module.exports = {
   createOrderSchema,
   updateStatusSchema,
   assignAgentSchema,
+  assignStoresSchema
 };

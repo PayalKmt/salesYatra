@@ -1,11 +1,17 @@
-// routes/userRoutes.js
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const storeController = require('../controllers/storeController');
+const storeController = require("../controllers/storeController");
 
-// add the store creation part
-router.post('/create/store', storeController.createStore);
+// Create a new store
+router.post("/create/store", storeController.createStore);
 
-// router.get('/:userId', userController.getUser);
+// Get a store by ID (via body — consider changing to params for REST consistency)
+router.post("/get/:storeId", storeController.getStoreById);
+
+// Update store data by ID
+router.put("/:storeId", storeController.updateStoreData);
+
+// Delete store by ID
+router.delete("/:storeId", storeController.deleteStoreById);
 
 module.exports = router;

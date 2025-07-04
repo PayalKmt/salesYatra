@@ -3,8 +3,8 @@ const { z } = require("zod");
 // Zod schema for Firestore GeoPoint
 const GeoPointSchema = z
   .object({
-    _latitude: z.number(),
-    _longitude: z.number(),
+    latitude: z.number(),
+    longitude: z.number(),
   })
   .strict();
 

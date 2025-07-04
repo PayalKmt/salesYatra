@@ -4,6 +4,7 @@ const {
   createOrderSchema,
   updateStatusSchema,
   assignAgentSchema,
+  assignStoresSchema,
 } = require("../../schemas/warehouseWeb/ordersValidate");
 
 const createOrder = async (req, res) => {
@@ -65,9 +66,28 @@ const assignDeliveryAgent = async (req, res) => {
   }
 };
 
+const assignStoreSchema = async (req, res) => {
+  try {
+    // console.log(req.body.storeId[0]);
+    // console.log(req.params.orderId);
+    const validatedData  = assignStoresSchema.parse(req.body);
+    // console.log(...validatedData);
+    await OrderService.assignStoreToOrder(req.params.orderId, validatedData.storeId[0]);
+    res
+      .status(StatusCodes.OK)
+      .json({ message: "Orders are assigned successfully" });
+  } catch (error) {
+    res.status(StatusCodes.BAD_REQUEST).json({
+      message: error.errors ? "Validation error" : error.message,
+      errors: error.errors || undefined,
+    });
+  }
+};
+
 module.exports = {
   createOrder,
   getWarehouseOrders,
   updateOrderStatus,
   assignDeliveryAgent,
+  assignStoreSchema,
 };

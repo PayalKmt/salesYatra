@@ -109,10 +109,39 @@ const assignDeliveryAgent = async (orderId, deliveryAgentId) => {
   await batch.commit();
 };
 
+const assignStoreToOrder = async(orderId, storeId) => {
+  try {
+    const orderRef = db.collection('orders').doc(orderId);
+    const orderDoc = await orderRef.get();
+    const storeRef = db.collection('stores').doc(storeId);
+    const storeDoc = await storeRef.get();
+
+    if (!orderDoc.exists) throw new Error('Order not found');
+    if (!storeDoc.exists) throw new Error('Store not found');
+
+    const batch = db.batch();
+
+    batch.update(orderRef, {
+      storeId: [storeId],
+      updatedAt: new Date().toISOString()
+    })
+
+    batch.update(storeRef, {
+      orderedItem : [orderId],
+    })
+    await batch.commit();
+ 
+  } catch (error) {
+    console.error('Error assigning store to order:', error);
+    throw new Error(error.message || 'Failed to store order');
+  }
+}
+
 module.exports = {
   createOrder,
   getWarehouseOrders,
   updateOrderStatus,
   _updateInventory,
   assignDeliveryAgent,
+  assignStoreToOrder
 };

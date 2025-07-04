@@ -6,5 +6,6 @@ router.post("/create/order", OrderController.createOrder);
 router.get("/warehouse/:warehouseId", OrderController.getWarehouseOrders);
 router.put("/:id/status", OrderController.updateOrderStatus);
 router.put("/:id/assign-agent", OrderController.assignDeliveryAgent);
+router.put("/:orderId/assignOrder", OrderController.assignStoreSchema);
 
 module.exports = router;
