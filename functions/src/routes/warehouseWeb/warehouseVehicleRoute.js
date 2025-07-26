@@ -8,10 +8,10 @@ const vehicleController = require('../../controllers/warehouseWeb/warehouseVehic
 router.post('/create/vehicle', vehicleController.createVehicle);
 
 // Get vehicle by ID
-router.get('/:vehicleId', vehicleController.getVehicle);
+router.get('/get/vehicle/:vehicleId', vehicleController.getVehicle);
 
 // Get all vehicles for a warehouse
-router.get('/warehouse/:warehouseId/allVehicles', vehicleController.getWarehouseVehicles);
+router.get('/get/allVehicles/:warehouseId', vehicleController.getWarehouseVehicles);
 
 // Update vehicle details
 router.put('/update/vehicleDetail/:vehicleId', vehicleController.updateVehicle);
@@ -20,9 +20,9 @@ router.put('/update/vehicleDetail/:vehicleId', vehicleController.updateVehicle);
 router.put('/update/vehicleLocation/:vehicleId', vehicleController.updateLocation);
 
 // assign vehicle to agent
-router.post('/:vehicleId/assignVehicle', vehicleController.assignVehicle);
+router.post('/assignVehicle/:vehicleId', vehicleController.assignVehicle);
 
 // Delete vehicle
-router.delete('delete/:vehicleId', vehicleController.deleteVehicle);
+router.delete('/delete/vehicle/:vehicleId', vehicleController.deleteVehicle);
 
 module.exports = router;

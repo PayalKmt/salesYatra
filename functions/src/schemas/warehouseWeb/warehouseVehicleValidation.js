@@ -7,7 +7,7 @@ const LocationSchema = z.object({
 
 const CreateVehicleSchema = z.object({
   warehouseId: z.string().min(1, "Warehouse ID is required"),
-  agentId: z.string().min(1).optional(),
+  agentId: z.string().min().optional(),
   vehicleType: z.enum(['bike', 'van', 'truck']),
   vehicleCapacity: z.number().min(1, "Capacity must be at least 1"),
   licensePlate: z.string().min(3, "License plate must be at least 3 characters").optional(),
@@ -18,7 +18,7 @@ const CreateVehicleSchema = z.object({
 const UpdateVehicleSchema = z.object({
   vehicleType: z.enum(['bike', 'van', 'truck']).optional(),
   vehicleCapacity: z.number().min(1).optional(),
-  agentId: z.string().min(1).optional(),
+  agentId: z.string().min().optional(),
   licensePlate: z.string().min(3).optional(),
   currentLocation: LocationSchema,
   status: z.enum(['available', 'in_use', 'maintenance']).optional()

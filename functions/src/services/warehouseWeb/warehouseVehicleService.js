@@ -6,7 +6,7 @@ const { v4: uuidv4 } = require('uuid');
 const createVehicle = async (vehicleData) => {
   try {
     // Verify warehouse exists
-    const warehouseDoc = await db.collection('warehouses').doc(vehicleData.warehouseId).get();
+    const warehouseDoc = await db.collection('allWarehouses').doc(vehicleData.warehouseId).get();
     if (!warehouseDoc.exists) {
       throw new Error('Warehouse not found');
     }
@@ -17,6 +17,7 @@ const createVehicle = async (vehicleData) => {
     const vehicleToCreate = {
       vehicleId,
       ...vehicleData,
+      agentId: "",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -78,6 +79,7 @@ const updateVehicle = async (vehicleId, updateData) => {
 
     await vehicleRef.update(updatePayload);
     return getVehicleById(vehicleId);
+    // return updatePayload;
   } catch (error) {
     console.error('Error updating vehicle:', error);
     throw new Error(error.message || 'Failed to update vehicle');

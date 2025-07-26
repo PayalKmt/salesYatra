@@ -4,7 +4,6 @@ const {
   createOrderSchema,
   updateStatusSchema,
   assignAgentSchema,
-  assignStoresSchema,
 } = require("../../schemas/warehouseWeb/ordersValidate");
 
 const createOrder = async (req, res) => {
@@ -33,10 +32,23 @@ const getWarehouseOrders = async (req, res) => {
   }
 };
 
+const getStoreOrders = async (req, res) => {
+  try {
+    const orders = await OrderService.getStoreOrders(
+      req.params.storeId
+    );
+    res.status(StatusCodes.OK).json(orders);
+  } catch (error) {
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ message: error.message });
+  }
+};
+
 const updateOrderStatus = async (req, res) => {
   try {
     const validatedData = updateStatusSchema.parse(req.body);
-    await OrderService.updateOrderStatus(req.params.id, validatedData.status);
+    await OrderService.updateOrderStatus(req.params.orderId, validatedData.status);
     res
       .status(StatusCodes.OK)
       .json({ message: "Order status updated successfully" });
@@ -50,14 +62,26 @@ const updateOrderStatus = async (req, res) => {
 
 const assignDeliveryAgent = async (req, res) => {
   try {
-    const validatedData = assignAgentSchema.parse(req.body);
-    await OrderService.assignDeliveryAgent(
-      req.params.id,
-      validatedData.deliveryAgentId
+    // const validatedData = assignAgentSchema.parse({
+    //   orderId: req.params.orderId,
+    //   deliveryAgentId: req.body.deliveryAgentId || null,
+    // });
+
+    console.log(req.body.deliveryAgentId);
+
+    const updatedOrder = await OrderService.assignDeliveryAgent(
+      req.params.orderId,
+      req.body.deliveryAgentId
     );
-    res
-      .status(StatusCodes.OK)
-      .json({ message: "Delivery agent assigned successfully" });
+
+    const message = req.body.deliveryAgentId
+      ? "Delivery agent assigned and order marked as shipped"
+      : "Delivery agent unassigned successfully";
+
+    res.status(StatusCodes.OK).json({ 
+      message,
+      order: updatedOrder 
+    });
   } catch (error) {
     res.status(StatusCodes.BAD_REQUEST).json({
       message: error.errors ? "Validation error" : error.message,
@@ -66,28 +90,11 @@ const assignDeliveryAgent = async (req, res) => {
   }
 };
 
-const assignStoreSchema = async (req, res) => {
-  try {
-    // console.log(req.body.storeId[0]);
-    // console.log(req.params.orderId);
-    const validatedData  = assignStoresSchema.parse(req.body);
-    // console.log(...validatedData);
-    await OrderService.assignStoreToOrder(req.params.orderId, validatedData.storeId[0]);
-    res
-      .status(StatusCodes.OK)
-      .json({ message: "Orders are assigned successfully" });
-  } catch (error) {
-    res.status(StatusCodes.BAD_REQUEST).json({
-      message: error.errors ? "Validation error" : error.message,
-      errors: error.errors || undefined,
-    });
-  }
-};
 
 module.exports = {
   createOrder,
   getWarehouseOrders,
+  getStoreOrders,
   updateOrderStatus,
-  assignDeliveryAgent,
-  assignStoreSchema,
+  assignDeliveryAgent
 };

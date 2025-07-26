@@ -3,45 +3,51 @@ const {
   StoreSchema,
   UpdateStoreSchema,
 } = require("../schemas/storeValidation");
-const { StatusCodes } = require("http-status-codes");
 const { v4: uuidv4 } = require("uuid");
+
+const collection = db.collection("stores");
 
 const createStore = async (storeData) => {
   try {
+    // Validate store data
     const validatedData = StoreSchema.parse({
       ...storeData,
+      orderedItems: [], // Initialize empty array for orders
+      deliveryAgents: [], // Initialize empty array for delivery agents
+    });
+
+    // Create store document
+    const storeId = uuidv4();
+    const storeRef = db.collection("stores").doc(storeId);
+    await storeRef.set({
+      storeId,
+      ...validatedData,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
 
-    // Generate a unique ID for the user
-    const storeId = uuidv4();
-    const storeRef = db.collection("stores").doc(storeId);
-
-    // Store the user data in Firestore
-    await storeRef.set({ storeId, ...validatedData });
-
-    // Return the created user data
     return {
-      storeId,
+      storeId: storeId,
       ...validatedData,
     };
   } catch (error) {
-    console.error("Error creating user:", error);
-    throw new Error(error.message || "Failed to create user");
+    console.error("Error creating store:", error);
+    throw new Error(
+      error.errors?.[0]?.message || error.message || "Failed to create store"
+    );
   }
 };
 
 const getStore = async (storeId) => {
   try {
-    const doc = await this.collection.doc(storeId).get();
+    const doc = await collection.doc(storeId).get();
 
     if (!doc.exists) {
-      return "Not Found!";
+      throw new Error("Store not found");
     }
 
     return {
-      id: doc.id,
+      storeId: doc.id,
       ...doc.data(),
     };
   } catch (error) {
@@ -49,39 +55,70 @@ const getStore = async (storeId) => {
   }
 };
 
-/**
- * Update a store with validation
- * @param {string} storeId - ID of the store to update
- * @param {object} updateData - Partial store data to update
- * @returns {Promise<object>} - Updated store document
- */
 const updateStore = async (storeId, updateData) => {
   try {
-    // Validate the update data
-    const validatedUpdate = UpdateStoreSchema.parse(updateData);
+    // Validate update data
+    const validatedUpdate = UpdateStoreSchema.parse({
+      ...updateData,
+      updatedAt: new Date().toISOString(),
+    });
 
-    // Update in Firestore
-    await this.collection.doc(storeId).update(validatedUpdate);
+    // Update store document
+    await collection.doc(storeId).update(validatedUpdate);
 
-    // Return the updated document
-    return this.getStore(storeId);
+    // Return updated store data
+    return getStore(storeId);
   } catch (error) {
-    throw new Error(`Store update failed: ${error.message}`);
+    throw new Error(
+      `Store update failed: ${error.errors?.[0]?.message || error.message}`
+    );
   }
 };
 
-/**
- * Delete a store
- * @param {string} storeId - ID of the store to delete
- * @returns {Promise<boolean>} - True if deletion was successful
- */
 const deleteStore = async (storeId) => {
   try {
-    await this.collection.doc(storeId).delete();
-    return true;
+    // Check if store exists
+    const doc = await collection.doc(storeId).get();
+    if (!doc.exists) {
+      throw new Error("Store not found");
+    }
+
+    // Delete store document
+    await collection.doc(storeId).delete();
+    return { success: true, message: "Store deleted successfully" };
   } catch (error) {
     throw new Error(`Store deletion failed: ${error.message}`);
   }
 };
 
-module.exports = { createStore, getStore, updateStore, deleteStore };
+// Additional store-related functions
+const addOrderToStore = async (storeId, orderId) => {
+  try {
+    await collection.doc(storeId).update({
+      orderedItems: admin.firestore.FieldValue.arrayUnion(orderId),
+      updatedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    throw new Error(`Failed to add order to store: ${error.message}`);
+  }
+};
+
+const assignDeliveryAgentToStore = async (storeId, agentId) => {
+  try {
+    await collection.doc(storeId).update({
+      deliveryAgents: admin.firestore.FieldValue.arrayUnion(agentId),
+      updatedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    throw new Error(`Failed to assign delivery agent: ${error.message}`);
+  }
+};
+
+module.exports = {
+  createStore,
+  getStore,
+  updateStore,
+  deleteStore,
+  addOrderToStore,
+  assignDeliveryAgentToStore,
+};

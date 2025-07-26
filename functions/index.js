@@ -17,6 +17,7 @@ const warehouseSubscriptionRoutes = require("./src/routes/warehouseWeb/warehouse
 const deliveryAgentProfileRoutes = require("./src/routes/deliveryAgent/deliveryAgentProfileRoutes");
 const nearestStoresDistanceRoutes = require("./src/routes/location_tracking/distanceRoute");
 const promoCodeRoutes = require("./src/routes/warehouseWeb/promoCodeRoute");
+const warehouseDetailsRoutes = require("./src/routes/superAdminPanel/warehouseDetailsRoute");
 
 app.use(cors({ origin: true }));
 app.use(bodyParser.json());
@@ -33,15 +34,19 @@ app.use("/api", warehouseSubscriptionRoutes);
 app.use("/api", deliveryAgentProfileRoutes);
 app.use("/api", nearestStoresDistanceRoutes);
 app.use("/api", promoCodeRoutes);
+app.use("/api", warehouseDetailsRoutes);
 
 // const port = 3000;
 // app.listen(port,()=>{
 //     console.log("App is listening at port 3000")
 // });
-app.listen();
 
-// app.get('/',(req,res)=>{
-//     return res.status(200).send("Hello world")
-// })
+// app.listen(3000, '0.0.0.0', () => {
+//   console.log("Server running on port 3000");
+// });
+
+app.get('/',(req,res)=>{
+    return res.status(200).send("Hello world")
+})
 
 exports.app = functions.https.onRequest(app);

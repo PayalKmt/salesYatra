@@ -8,15 +8,15 @@ const userController = require('../../controllers/warehouseWeb/warehouseUsersCon
 router.post('/create/warehouseUser', userController.createUser);
 
 // Get users by warehouse
-router.get('/warehouse/:warehouseId', userController.getUsersByWarehouse);
+router.get('/get/warehouseUsers/:warehouseId', userController.getUsersByWarehouse);
 
 // Get user by ID
-router.get('/:id', userController.getUserById);
+router.get('/get/warehouseUser/:id', userController.getUserById);
 
 // Update user
-router.put('update/:id', userController.updateUser);
+router.put('/update/warehouseUser/:id', userController.updateUser);
 
 // Delete user
-router.delete('delete/:id', userController.deleteUser);
+router.delete('/delete/warehouseUser/:id', userController.deleteUser);
 
 module.exports = router;

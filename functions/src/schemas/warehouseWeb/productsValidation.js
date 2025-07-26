@@ -11,6 +11,7 @@ const CreateProductSchema = z.object({
   supplierId: z.string().min(1),
   warehouseId: z.string().min(1),
   minimumOrderQuantity: z.number().min(1),
+  promoCodeId: z.string().nullable().optional(), 
 });
 
 const UpdateProductSchema = z.object({
@@ -22,7 +23,8 @@ const UpdateProductSchema = z.object({
   wholesalerPrice: z.number().positive().optional(),
   distributorPrice: z.number().positive().optional(),
   supplierId: z.string().min(1).optional(),
-  minimumOrderQuantity: z.number().min(1).optional()
+  minimumOrderQuantity: z.number().min(1).optional(),
+  promoCodeId: z.string().nullable().optional(), 
 });
 
 module.exports = {

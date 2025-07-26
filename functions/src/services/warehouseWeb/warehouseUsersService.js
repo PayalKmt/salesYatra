@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 const createUser = async (userData) => {
   try {
     // Validate warehouse existence
-    const warehouseRef = db.collection('warehouses').doc(userData.warehouseId);
+    const warehouseRef = db.collection('allWarehouses').doc(userData.warehouseId);
     const warehouse = await warehouseRef.get();
 
     if (!warehouse.exists) {
@@ -13,10 +13,10 @@ const createUser = async (userData) => {
     }
 
     // Validate allowed roles
-    const allowedRoles = warehouse.data().allowedUserRoles;
-    if (!allowedRoles.includes(userData.role)) {
-      throw new Error(`Role "${userData.role}" not allowed for this warehouse`);
-    }
+    // const allowedRoles = warehouse.data().allowedUserRoles;
+    // if (!allowedRoles.includes(userData.role)) {
+    //   throw new Error(`Role "${userData.role}" not allowed for this warehouse`);
+    // }
 
     // Generate UUID for userId
     const userId = uuidv4();
@@ -68,7 +68,7 @@ const updateUser = async (userId, updateData) => {
 
     await userRef.update({
       ...updateData,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      updatedAt: new Date().toISOString()
     });
 
     const updatedUser = await userRef.get();
