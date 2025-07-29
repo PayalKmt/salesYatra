@@ -24,18 +24,40 @@ const warehouseDetailsSchema = z.object({
   logoFilePath: z.string().optional(),
 });
 
-// Define Zod schema for Subscription Plan
+// Define Zod schema for Subscription Plan (updated to match service implementation)
 const subscriptionPlanSchema = z.object({
-  subscriptionType: z.string().min(1, 'Subscription Type is required.'),
-  numberOfUsers: z.number().int().min(0, 'Number of Users must be a non-negative integer.'),
-  additionalUser: z.number().int().min(0, 'Additional User must be a non-negative integer.').optional(),
+  planName: z.enum(['basic', 'premium', 'enterprise'], {
+    required_error: 'Plan name is required',
+    invalid_type_error: 'Invalid plan name'
+  }),
   price: z.number().min(0, 'Price must be a non-negative number.'),
-  billingCycle: z.string().min(1, 'Billing Cycle is required.'),
-  startDate: z.string().datetime().optional(), // ISO 8601 string from Flutter DateTime
-  endDate: z.string().datetime().optional(),   // ISO 8601 string from Flutter DateTime
+  billingCycle: z.enum(['monthly', 'quarterly', 'yearly'], {
+    required_error: 'Billing cycle is required',
+    invalid_type_error: 'Invalid billing cycle'
+  }),
+  startDate: z.string().datetime({ offset: true }).optional(),
+  endDate: z.string().datetime({ offset: true }).optional(),
+  maxUsers: z.number().int().min(1, 'Must have at least 1 user'),
+  maxOrders: z.number().int().min(0, 'Cannot be negative'),
+  features: z.array(z.string()).optional(),
+  status: z.enum(['active', 'pending', 'suspended', 'canceled']).default('pending'),
+  autoRenew: z.boolean().default(true),
   promocode: z.string().optional(),
-  allowedUserRoles: z.array(z.string()).optional()
+  paymentMethodId: z.string().optional(),
+  allowedUserRoles: z.array(z.string())
     .default(['warehouseManager', 'supplier', 'deliveryAgent'])
+});
+
+// Define Zod schema for Subscription Update
+const subscriptionUpdateSchema = z.object({
+  newPlan: z.enum(['basic', 'premium', 'enterprise'], {
+    required_error: 'Plan name is required',
+    invalid_type_error: 'Invalid plan name'
+  }),
+  immediate: z.boolean().default(false),
+  prorated: z.boolean().default(true),
+  paymentMethodId: z.string().optional(),
+  promocode: z.string().optional()
 });
 
 // Define Zod schema for User Assignment
@@ -43,18 +65,40 @@ const userAssignmentSchema = z.object({
   userName: z.string().min(1, 'User Name is required.'),
   phoneNumber: z.string().min(1, 'Phone Number is required.').regex(/^\d+$/, 'Phone number must be digits.'),
   userType: z.string().min(1, 'User Type is required.'),
+  role: z.enum(['warehouseManager', 'supplier', 'deliveryAgent'])
 });
 
 // Combined schema for the full onboarding data submission
 const onboardWarehouseSchema = z.object({
   warehouseDetails: warehouseDetailsSchema,
   subscriptionPlan: subscriptionPlanSchema,
-  userAssignments: z.array(userAssignmentSchema).optional(),
+  userAssignments: z.array(userAssignmentSchema).min(1, 'At least one user assignment is required'),
+  // Added for subscription tracking
+  billingInfo: z.object({
+    companyName: z.string().min(1, 'Company name is required'),
+    taxId: z.string().optional(),
+    billingEmail: z.string().email('Invalid billing email'),
+    billingAddress: z.string().min(1, 'Billing address is required')
+  }).optional()
+});
+
+// Schema for subscription plan response
+const subscriptionPlanResponseSchema = z.object({
+  planName: z.string(),
+  price: z.number(),
+  billingCycle: z.string(),
+  features: z.array(z.string()),
+  limitations: z.object({
+    maxUsers: z.number(),
+    maxOrders: z.union([z.number(), z.literal('unlimited')])
+  })
 });
 
 module.exports = {
   warehouseDetailsSchema,
   subscriptionPlanSchema,
+  subscriptionUpdateSchema,
   userAssignmentSchema,
   onboardWarehouseSchema,
+  subscriptionPlanResponseSchema
 };
