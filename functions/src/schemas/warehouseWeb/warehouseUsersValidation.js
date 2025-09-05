@@ -1,6 +1,6 @@
 const { z } = require('zod');
 
-const { DocumentReference } = require('firebase/firestore');
+const { DocumentReference } = require('firebase-admin/firestore');
 
 // const userRef = z.instanceof(DocumentReference);
 const userRef = z.union([

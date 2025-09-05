@@ -18,6 +18,7 @@ const deliveryAgentProfileRoutes = require("./src/routes/deliveryAgent/deliveryA
 const nearestStoresDistanceRoutes = require("./src/routes/location_tracking/distanceRoute");
 const promoCodeRoutes = require("./src/routes/warehouseWeb/promoCodeRoute");
 const warehouseDetailsRoutes = require("./src/routes/superAdminPanel/warehouseDetailsRoute");
+const notificationRoutes = require("./src/routes/warehouseWeb/notificationRoute");
 
 app.use(cors({ origin: true }));
 app.use(bodyParser.json());
@@ -35,6 +36,7 @@ app.use("/api", deliveryAgentProfileRoutes);
 app.use("/api", nearestStoresDistanceRoutes);
 app.use("/api", promoCodeRoutes);
 app.use("/api", warehouseDetailsRoutes);
+app.use("/api", notificationRoutes);
 
 // const port = 3000;
 // app.listen(port,()=>{
@@ -49,4 +51,16 @@ app.get('/',(req,res)=>{
     return res.status(200).send("Hello world")
 })
 
-exports.app = functions.https.onRequest(app);
+// 🐳 Add this for Docker container run
+if (process.env.RUNNING_IN_DOCKER === "true") {
+  app.listen(3000, "0.0.0.0", () => {
+    console.log(`Server running on port 3000`);
+  });
+}
+
+// ✅ Keep Firebase for actual cloud deploy
+if (process.env.RUNNING_IN_DOCKER !== "true") {
+  const functions = require("firebase-functions");
+  exports.app = functions.https.onRequest(app);
+}
+// exports.app = functions.https.onRequest(app);

@@ -1,13 +1,16 @@
-const admin = require('firebase-admin');
+const admin = require("firebase-admin");
 const db = admin.firestore();
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 // Import the product schemas
-const { CreateProductSchema, UpdateProductSchema } = require('../../schemas/warehouseWeb/productsValidation'); // Assuming this path is correct
+const {
+  CreateProductSchema,
+  UpdateProductSchema,
+} = require("../../schemas/warehouseWeb/productsValidation"); // Assuming this path is correct
 
 // Helper to extract document ID from full path like "warehouses/warehouse123"
 const getIdFromPath = (path) => {
-  return path.includes('/') ? path.split('/').pop() : path;
+  return path.includes("/") ? path.split("/").pop() : path;
 };
 
 const createProduct = async (productData) => {
@@ -25,44 +28,51 @@ const createProduct = async (productData) => {
       productId,
       ...validatedData, // Use validated data
       createdAt,
-      updatedAt
+      updatedAt,
     };
 
-    const productRef = db.collection('products').doc(productId);
+    const productRef = db.collection("products").doc(productId);
     await productRef.set(product);
 
     // Initialize warehouse inventory
     // Assuming warehouseId in productData is already a simple ID, not a full path.
     // If it's a full path, uncomment and use getIdFromPath.
     const warehouseId = validatedData.warehouseId; // Use validatedData.warehouseId
-    const inventoryRef = db.collection('warehouse_inventory').doc(`${warehouseId}_${productId}`);
+    const inventoryRef = db
+      .collection("warehouse_inventory")
+      .doc(`${warehouseId}_${productId}`);
+
     await inventoryRef.set({
       warehouseId: warehouseId,
-      productId,
-      stock: validatedData.stock, // Use validatedData.stock
+      productId: productId,
+      stock: validatedData.stock,
+      reserved: 0, // ✅ Add default reserved
+      minimumStockLevel: validatedData.minimumOrderQuantity || 0, // optional if you want to include
+      createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
 
     return {
       productId,
-      ...product
+      ...product,
     };
   } catch (error) {
-    console.error('Error creating product:', error.message); // Log error message
-    throw new Error(error.message || 'Failed to create product');
+    console.error("Error creating product:", error.message); // Log error message
+    throw new Error(error.message || "Failed to create product");
   }
 };
 
 const getProductsByWarehouse = async (warehouseId) => {
   try {
-    const snapshot = await db.collection('products')
-      .where('warehouseId', '==', warehouseId)
+    const snapshot = await db
+      .collection("products")
+      .where("warehouseId", "==", warehouseId)
       .get();
 
-    return snapshot.docs.map(doc => doc.data());
+    return snapshot.docs.map((doc) => doc.data());
   } catch (error) {
-    console.error('Error fetching products:', error.message); // Log error message
-    throw new Error(error.message || 'Failed to fetch products');
+    console.error("Error fetching products:", error.message); // Log error message
+    throw new Error(error.message || "Failed to fetch products");
   }
 };
 
@@ -71,11 +81,11 @@ const updateProduct = async (updateData) => {
     // Validate incoming update data using Zod partial schema
     const validatedUpdates = UpdateProductSchema.parse(updateData);
 
-    const productRef = db.collection('products').doc(updateData.productId);
+    const productRef = db.collection("products").doc(updateData.productId);
     const productDoc = await productRef.get();
 
     if (!productDoc.exists) {
-      throw new Error('Product not found for update.');
+      throw new Error("Product not found for update.");
     }
 
     // Add or update the updatedAt timestamp
@@ -85,32 +95,45 @@ const updateProduct = async (updateData) => {
 
     // Update inventory if stock changed
     if (validatedUpdates.stock !== undefined) {
-      const productData = productDoc.data(); // Use original product data for warehouseId if not in updates
-      const warehouseId = validatedUpdates.warehouseId || getIdFromPath(productData.warehouseId); // Use updated warehouseId if provided, else existing
-      const inventoryRef = db.collection('warehouse_inventory')
+      const inventoryRef = db
+        .collection("warehouse_inventory")
         .doc(`${warehouseId}_${updateData.productId}`);
 
-      await inventoryRef.update({
+      const inventoryDoc = await inventoryRef.get();
+
+      if (!inventoryDoc.exists) {
+        throw new Error("Inventory document not found.");
+      }
+
+      const inventoryData = inventoryDoc.data();
+      const inventoryUpdates = {
         stock: validatedUpdates.stock,
-        updatedAt: new Date().toISOString() // Consistent timestamping
-      });
+        updatedAt: new Date().toDateString(),
+      };
+
+      // Check if stock increased → update lastRestocked
+      if (validatedUpdates.stock > inventoryData.stock) {
+        inventoryUpdates.lastRestocked = new Date().toDateString();
+      }
+
+      await inventoryRef.update(inventoryUpdates);
     }
 
     const updatedProduct = await productRef.get();
     return updatedProduct.data();
   } catch (error) {
-    console.error('Error updating product:', error.message); // Log error message
-    throw new Error(error.message || 'Failed to update product');
+    console.error("Error updating product:", error.message); // Log error message
+    throw new Error(error.message || "Failed to update product");
   }
 };
 
 const deleteProduct = async (productId) => {
   try {
-    const productRef = db.collection('products').doc(productId);
+    const productRef = db.collection("products").doc(productId);
     const product = await productRef.get();
 
     if (!product.exists) {
-      throw new Error('Product not found for deletion.');
+      throw new Error("Product not found for deletion.");
     }
 
     const productData = product.data();
@@ -119,7 +142,8 @@ const deleteProduct = async (productId) => {
 
     // Delete from warehouse_inventory
     const warehouseId = getIdFromPath(productData.warehouseId);
-    const inventoryRef = db.collection('warehouse_inventory')
+    const inventoryRef = db
+      .collection("warehouse_inventory")
       .doc(`${warehouseId}_${productId}`);
     batch.delete(inventoryRef);
 
@@ -136,8 +160,8 @@ const deleteProduct = async (productId) => {
 
     return { id: productId, deleted: true };
   } catch (error) {
-    console.error('Error deleting product:', error.message); // Log error message
-    throw new Error(error.message || 'Failed to delete product');
+    console.error("Error deleting product:", error.message); // Log error message
+    throw new Error(error.message || "Failed to delete product");
   }
 };
 
@@ -145,5 +169,5 @@ module.exports = {
   createProduct,
   getProductsByWarehouse,
   updateProduct,
-  deleteProduct
+  deleteProduct,
 };

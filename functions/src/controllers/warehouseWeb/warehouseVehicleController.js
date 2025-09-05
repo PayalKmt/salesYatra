@@ -1,59 +1,67 @@
-const vehicleService = require('../../services/warehouseWeb/warehouseVehicleService');
-const { z } = require('zod');
-const { CreateVehicleSchema, UpdateVehicleSchema, assignVehicleSchema } = require('../../schemas/warehouseWeb/warehouseVehicleValidation');
-const { StatusCodes } = require("http-status-codes");
+const VehicleService = require('../../services/warehouseWeb/warehouseVehicleService');
+const { StatusCodes } = require('http-status-codes');
+const {
+  CreateVehicleSchema,
+  UpdateVehicleSchema
+  // assignVehicleSchema
+} = require('../../schemas/warehouseWeb/warehouseVehicleValidation');
 
-const handleError = (error, res) => {
-  if (error instanceof z.ZodError) {
-    return res.status(400).json({
-      message: 'Validation failed',
+const handleError = (res, error) => {
+  console.error(error);
+  if (error.name === 'ZodError') {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      message: 'Validation error',
       errors: error.errors.map(err => ({
         field: err.path.join('.'),
         message: err.message
       }))
     });
   }
-  res.status(error.statusCode || 500).json({ message: error.message });
+  res.status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR).json({
+    message: error.message
+  });
 };
 
 const createVehicle = async (req, res) => {
   try {
     const validatedData = CreateVehicleSchema.parse(req.body);
-    const vehicle = await vehicleService.createVehicle(validatedData);
-    res.status(201).json(vehicle);
+    const vehicle = await VehicleService.createVehicle(validatedData);
+    res.status(StatusCodes.CREATED).json(vehicle);
   } catch (error) {
-    handleError(error, res);
+    handleError(res, error);
   }
 };
 
 const getVehicle = async (req, res) => {
   try {
-    const vehicle = await vehicleService.getVehicleById(req.params.vehicleId);
+    const vehicle = await VehicleService.getVehicleById(req.params.vehicleId);
     if (!vehicle) {
-      return res.status(404).json({ message: 'Vehicle not found' });
+      return res.status(StatusCodes.NOT_FOUND).json({
+        message: 'Vehicle not found'
+      });
     }
-    res.json(vehicle);
+    res.status(StatusCodes.OK).json(vehicle);
   } catch (error) {
-    handleError(error, res);
+    handleError(res, error);
   }
 };
 
 const getWarehouseVehicles = async (req, res) => {
   try {
-    const vehicles = await vehicleService.getVehiclesByWarehouse(req.params.warehouseId);
-    res.json(vehicles);
+    const vehicles = await VehicleService.getVehiclesByWarehouse(req.params.warehouseId);
+    res.status(StatusCodes.OK).json(vehicles);
   } catch (error) {
-    handleError(error, res);
+    handleError(res, error);
   }
 };
 
 const updateVehicle = async (req, res) => {
   try {
     const validatedData = UpdateVehicleSchema.parse(req.body);
-    const vehicle = await vehicleService.updateVehicle(req.params.vehicleId, validatedData);
-    res.json(vehicle);
+    const vehicle = await VehicleService.updateVehicle(req.params.vehicleId, validatedData);
+    res.status(StatusCodes.OK).json(vehicle);
   } catch (error) {
-    handleError(error, res);
+    handleError(res, error);
   }
 };
 
@@ -61,42 +69,42 @@ const updateLocation = async (req, res) => {
   try {
     const { latitude, longitude } = req.body;
     if (latitude === undefined || longitude === undefined) {
-      return res.status(400).json({ message: 'Latitude and longitude are required' });
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        message: 'Latitude and longitude are required'
+      });
     }
-    const vehicle = await vehicleService.updateVehicleLocation(req.params.vehicleId, { latitude, longitude });
-    res.json(vehicle);
+    const vehicle = await VehicleService.updateVehicleLocation(
+      req.params.vehicleId, 
+      { latitude, longitude }
+    );
+    res.status(StatusCodes.OK).json(vehicle);
   } catch (error) {
-    handleError(error, res);
+    handleError(res, error);
   }
 };
 
-
 const assignVehicle = async (req, res) => {
   try {
-    console.log(req.params.vehicleId);
     const validatedData = assignVehicleSchema.parse(req.body);
-    console.log(validatedData);
-    await vehicleService.assignVehicleToAgent(
+    const vehicle = await VehicleService.assignVehicleToAgent(
       req.params.vehicleId,
       validatedData.agentId
     );
-    res
-      .status(StatusCodes.OK)
-      .json({ message: "Delivery agent assigned successfully" });
-  } catch (error) {
-    res.status(StatusCodes.BAD_REQUEST).json({
-      message: error.errors ? "Validation error" : error.message,
-      errors: error.errors || undefined,
+    res.status(StatusCodes.OK).json({
+      message: 'Vehicle assigned successfully',
+      vehicle
     });
+  } catch (error) {
+    handleError(res, error);
   }
 };
 
 const deleteVehicle = async (req, res) => {
   try {
-    const result = await vehicleService.deleteVehicle(req.params.vehicleId);
-    res.json(result);
+    const result = await VehicleService.deleteVehicle(req.params.vehicleId);
+    res.status(StatusCodes.OK).json(result);
   } catch (error) {
-    handleError(error, res);
+    handleError(res, error);
   }
 };
 

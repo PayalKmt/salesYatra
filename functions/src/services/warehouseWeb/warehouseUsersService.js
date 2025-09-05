@@ -1,6 +1,7 @@
 const admin = require('firebase-admin');
 const db = admin.firestore();
 const { v4: uuidv4 } = require('uuid');
+const DeliveryAgentService = require("../warehouseWeb/deliveryAgentService");
 
 const createUser = async (userData) => {
   try {
@@ -30,6 +31,19 @@ const createUser = async (userData) => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     });
+
+    // 🔥 Auto-create Delivery Agent if role is 'delivery-agent'
+    if (userData.role === 'deliveryAgent') {
+      await DeliveryAgentService.createDeliveryAgent({
+        userRef: {
+          docCollection: 'warehouseUsers',
+          docId: userId
+        },
+        warehouseId: userData.warehouseId,
+        vehicleId: userData.vehicleId || null // optional
+        // You can pass other optional delivery agent fields here
+      });
+    }
 
     return { userId, ...userData };
   } catch (error) {
