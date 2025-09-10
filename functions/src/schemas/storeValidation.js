@@ -24,6 +24,7 @@ const AddressSchema = z.object({
 const StoreSchema = z
   .object({
     storeName: z.string().min(1, "Store name is required"),
+    storeType: z.string().min(1, "Store type is required"),
     ownerName: z.string().min(1, "Owner name is required"),
     phoneNumber: z.string().min(10, "Phone number must be at least 10 digits"),
     orderedItems: z.array(z.string()).default([]), // Stores order IDs
@@ -43,6 +44,7 @@ const StoreSchema = z
 const UpdateStoreSchema = z
   .object({
     storeName: z.string().min(1).optional(),
+    storeType: z.string().min(1).optional(),
     ownerName: z.string().min(1).optional(),
     phoneNumber: z.string().min(10).optional(),
     orderedItems: z.array(z.string()).optional(),
